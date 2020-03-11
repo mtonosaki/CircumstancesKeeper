@@ -24,7 +24,25 @@
 
 <img id="VideoBuffer" src="~/img/novideo.png" class="img-responsive center-block" style="height: 0px; visibility: hidden;" />
 <div>
-    <button type="button" class="btn btn-primary"><i class="glyphicon glyphicon-play"></i> PLAY</button>
+    <a class="btn btn-info text-light" onclick="javascript: ButtonStop();">
+        <img id="ButtonStop" class="ImageButton" src="~/img/stopw.png" /> STOP
+    </a>
+    <a class="btn btn-info text-light" onclick="javascript: ButtonPlay();">
+        <img id="ButtonPlay" class="ImageButton" src="~/img/playw.png" /> PLAY
+    </a>
+    <a class="btn btn-info text-light" style="visibility:hidden; width:0;" onclick="javascript: ButtonFF();">
+        <img id="ButtonFF" class="ImageButton" src="~/img/ffw.png" /> FF
+    </a>
+    <a class="btn btn-primary text-light" onclick="javascript: ButtonNow();">
+        <img id="ButtonNow" class="ImageButton" src="~/img/noww.png" /> NOW
+    </a>
+    <br />
+    <a class="btn btn-secondary text-light" onclick="javascript: ButtonSkip(-15);">
+        -15sec
+    </a>
+    <a class="btn btn-secondary text-light" onclick="javascript: ButtonSkip(15);">
+        +15sec
+    </a>
 </div>
 
 @section Scripts {
@@ -43,21 +61,6 @@
             slider.tmpvalue = slider.ValuePx;
             slider.knobwidth = slider.knob.clientWidth / 2;
 
-            var set_value = () => {
-                slider.knob.style.left = (slider.tmpvalue - slider.knob.clientWidth / 2) + 'px';
-                slider.ValuePx = slider.tmpvalue;
-                slider.ValueRatio = slider.tmpvalue / slider.clientWidth;
-                if (slider.onRatioChanged != undefined) {
-                    slider.onRatioChanged(slider.ValueRatio);
-                }
-            };
-            set_value();
-
-            slider.onclick = evt => {
-                slider.isDragging = true;
-                document.onmousemove(evt);
-                document.onmouseup();
-            };
             slider.knob.onmousedown = evt => {
                 slider.isDragging = true;
                 if (slider.onBeginning != undefined) {
@@ -65,6 +68,7 @@
                 }
                 return false;
             };
+
             document.onmouseup = evt => {
                 if (slider.isDragging) {
                     slider.isDragging = false;
@@ -75,6 +79,7 @@
                     }
                 }
             };
+
             document.onmousemove = evt => {
                 if (slider.isDragging) {
                     if (!evt) {
@@ -92,9 +97,54 @@
                     return false;
                 }
             };
+
             window.onresize = evt => {
                 slider.tmpvalue = slider.ValueRatio * slider.clientWidth;
                 set_value();
+            };
+
+            const touchStartEvent = evt => {
+                evt.preventDefault();
+                slider.knob.onmousedown();
+            };
+            const touchEndEvent = evt => {
+                evt.preventDefault();
+                document.onmouseup();
+            };
+            const touchMoveEvent = evt => {
+                evt.preventDefault();
+                if (slider.isDragging) {
+                    var touch = evt.changedTouches[0];
+                    var left = touch.pageX;
+                    var rect = slider.getBoundingClientRect();
+                    slider.tmpvalue = Math.round(left - rect.left - slider.knobwidth);
+                    if (slider.tmpvalue < 0) {
+                        slider.tmpvalue = 0;
+                    } else if (slider.tmpvalue > slider.clientWidth) {
+                        slider.tmpvalue = slider.clientWidth;
+                    }
+                    set_value();
+                }
+            };
+
+            slider.knob.addEventListener('touchstart', touchStartEvent, false);
+            slider.knob.addEventListener('touchmove', touchMoveEvent, false);
+            slider.knob.addEventListener('touchend', touchEndEvent, false);
+
+            var set_value = () => {
+                slider.knob.style.left = (slider.tmpvalue - slider.knob.clientWidth / 2) + 'px';
+                slider.ValuePx = slider.tmpvalue;
+                slider.ValueRatio = slider.tmpvalue / slider.clientWidth;
+                if (slider.onRatioChanged != undefined) {
+                    slider.onRatioChanged(slider.ValueRatio);
+                }
+            };
+            set_value();
+
+            slider.onclick = evt => {
+                slider.isDragging = true;
+                document.onmousemove(evt);
+                document.onmouseup();
             };
         };
 
@@ -112,9 +162,13 @@
             Cold.ImageVideoBuffer = document.getElementById("VideoBuffer");
             Cold.TimeSlider = document.getElementById('timeslider1');
             Cold.TimeStamp = document.getElementById('TimeStamp');
+            Cold.ButtonStop = document.getElementById('ButtonStop');
+            Cold.ButtonPlay = document.getElementById('ButtonPlay');
+            Cold.ButtonFF = document.getElementById('ButtonFF');
+            Cold.ButtonNow = document.getElementById('ButtonNow');
 
             Hot.TargetDate = new Date();
-            Hot.PlayMode = "LATEST";
+            ButtonNow();
             Hot.OffsetMilliseconds = -0.0;
             Hot.LastSuccessSrc = Cold.Image.src;
 
@@ -150,9 +204,10 @@
             dp.innerHTML = dph;
 
             SliderProc(Cold.TimeSlider);
+
             Cold.TimeSlider.onRatioChanged = ratio => {
                 var t = new Date(Hot.TargetDate);
-                var sec = ratio * 86400;
+                var sec = ratio * 86399;
                 t.setMilliseconds(0);
                 t.setHours(0);
                 t.setMinutes(0);
@@ -167,12 +222,12 @@
             };
 
             Cold.TimeSlider.onBeginning = ratio => {
-                Hot.PlayMode = "STOP";
+                ButtonStop();
                 Hot.LastSuccessSrc = "/img/novideo.png";
             };
 
             Cold.TimeSlider.onFnished = ratio => {
-                Hot.PlayMode = "PLAYSHIFTED";
+                ButtonPlay();
             };
         };
 
@@ -184,7 +239,7 @@
         const UpdateShot = t => {
             Cold.ImageVideoBuffer.src = '/api/Frame/' + '@ViewBag.Location' + '?dt=' + t.toISOString();
             var ratio = t.getHours() * 3600 + t.getMinutes() * 60 + t.getSeconds() + t.getMilliseconds() / 1000;
-            ratio /= 86400.0;
+            ratio /= 86399.0;
             SetSliderRatio(Cold.TimeSlider, ratio);
             var a = new Date();
             Cold.TimeStamp.innerHTML = t.toLocaleString();
@@ -199,12 +254,12 @@
                 t.setHours(0);
                 t.setMinutes(0);
                 t.setMilliseconds(0);
-                var sec = Cold.TimeSlider.ValueRatio * 86400;
+                var sec = Cold.TimeSlider.ValueRatio * 86399.0;
                 t.setSeconds(sec);
                 t.setMilliseconds(Cold.IntervalMilliseconds + 1);
                 var now = new Date();
                 if (t > now) {
-                    Hot.PlayMode == "LATEST";
+                    ButtonNow();
                 } else {
                     UpdateShot(t);
                 }
@@ -218,6 +273,40 @@
                 t.setMilliseconds(0);
                 UpdateShot(t);
             }
+        };
+
+        const ButtonStop = () => {
+            Hot.PlayMode = "STOP";
+            Cold.ButtonStop.src = "/img/stopw.gif";
+            Cold.ButtonPlay.src = "/img/playw.png";
+            Cold.ButtonFF.src = "/img/ffw.png";
+            Cold.ButtonNow.src = "/img/noww.png";
+        };
+        const ButtonPlay = () => {
+            Hot.PlayMode = "PLAYSHIFTED";
+            Cold.ButtonPlay.src = "/img/playw.gif";
+            Cold.ButtonStop.src = "/img/stopw.png";
+            Cold.ButtonFF.src = "/img/ffw.png";
+            Cold.ButtonNow.src = "/img/noww.png";
+        };
+        const ButtonFF = () => {
+            Cold.ButtonFF.src = "/img/ffw.gif";
+            Cold.ButtonStop.src = "/img/stopw.png";
+            Cold.ButtonPlay.src = "/img/playw.png";
+            Cold.ButtonNow.src = "/img/noww.png";
+        };
+        const ButtonNow = () => {
+            Hot.PlayMode = "LATEST";
+            Cold.ButtonNow.src = "/img/noww.gif";
+            Cold.ButtonStop.src = "/img/stopw.png";
+            Cold.ButtonPlay.src = "/img/playw.png";
+            Cold.ButtonFF.src = "/img/ffw.png";
+        };
+
+        const ButtonSkip = offsetsec => {
+            Cold.TimeSlider.ValueRatio = Cold.TimeSlider.ValueRatio + offsetsec / 86399.0;
+            ButtonPlay();
+            AutoUpdateShot();
         };
     </script>
     <script type="text/javascript">

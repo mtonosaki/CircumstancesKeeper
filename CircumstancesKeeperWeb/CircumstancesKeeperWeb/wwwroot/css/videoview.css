@@ -33,3 +33,7 @@
     font-size: large;
     font-weight: bold;
 }
+.ImageButton {
+    width: 24px;
+    height: 24px;
+}
