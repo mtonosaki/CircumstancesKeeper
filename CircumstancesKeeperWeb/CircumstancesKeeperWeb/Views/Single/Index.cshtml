@@ -1,57 +1,312 @@
 ﻿@* (c) 2020 Manabu Tonosaki *@
 @* Licensed under the MIT license. *@
+
+@model CircumstancesKeeperWeb.Models.SingleViewModel
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<link href="~/css/videoview.css" rel="stylesheet" />
+<link href="~/css/videoview.css" rel="stylesheet" asp-append-version="true" />
 
 <h1>@ViewBag.Location</h1>
 <div class="MonitorView">
     <img id="Video" src="~/img/novideo.png" class="img-responsive center-block" style="margin-right:8px;" />
 </div>
+<div>
+    <span id="DateLinks" class="DatePicker">...</span>
+    <span id="TimeStamp" class="TimeStampDesign">2020/12/31 23:59:59</span>
+</div>
 
-<img id="VideoBuffer" src="~/img/novideo.png" class="img-responsive center-block" style="visibility: hidden;" />
+<div id="timeslider1" class="TimeSliderDegign">
+    <div></div>
+    <input type="button" value="">
+</div>
+
+<img id="VideoBuffer" src="~/img/novideo.png" class="img-responsive center-block" style="height: 0px; visibility: hidden;" />
+<div>
+    <a class="btn btn-info text-light" onclick="javascript: ButtonStop();">
+        <img id="ButtonStop" class="ImageButton" src="~/img/stopw.png" /> STOP
+    </a>
+    <a class="btn btn-info text-light" onclick="javascript: ButtonPlay();">
+        <img id="ButtonPlay" class="ImageButton" src="~/img/playw.png" /> PLAY
+    </a>
+    <a class="btn btn-info text-light" style="visibility:hidden; width:0;" onclick="javascript: ButtonFF();">
+        <img id="ButtonFF" class="ImageButton" src="~/img/ffw.png" /> FF
+    </a>
+    <a class="btn btn-primary text-light" onclick="javascript: ButtonNow();">
+        <img id="ButtonNow" class="ImageButton" src="~/img/noww.png" /> NOW
+    </a>
+    <br />
+    <a class="btn btn-secondary text-light" onclick="javascript: ButtonSkip(-15);">
+        -15sec
+    </a>
+    <a class="btn btn-secondary text-light" onclick="javascript: ButtonSkip(15);">
+        +15sec
+    </a>
+</div>
 
 @section Scripts {
     <script type="text/javascript">
-        var Param = {};
-        Param.IntervalMilliseconds = 1000;
-        Param.OffsetMilliseconds = -0.0;
-        Param.Controller = '/Single?location=';
-        var Dom = {};
+        var Hot = {};
+        var Cold = {};
+        Cold.IntervalMilliseconds = 1000;
+    </script>
+    <script type="text/javascript">
+        @*TIME SLIDER PROC*@
+        const SliderProc = slider => {
+            slider.knob = slider.getElementsByTagName('input')[0];
+            slider.isDragging = false;
+            slider.ValuePx = 0;
+            slider.ValueRatio = 0.0;
+            slider.tmpvalue = slider.ValuePx;
+            slider.knobwidth = slider.knob.clientWidth / 2;
+
+            slider.knob.onmousedown = evt => {
+                slider.isDragging = true;
+                if (slider.onBeginning != undefined) {
+                    slider.onBeginning(slider.ValueRatio);
+                }
+                return false;
+            };
+
+            document.onmouseup = evt => {
+                if (slider.isDragging) {
+                    slider.isDragging = false;
+                    slider.ValuePx = slider.tmpvalue;
+                    slider.ValueRatio = slider.tmpvalue / slider.clientWidth;
+                    if (slider.onFnished != undefined) {
+                        slider.onFnished(slider.ValueRatio);
+                    }
+                }
+            };
+
+            document.onmousemove = evt => {
+                if (slider.isDragging) {
+                    if (!evt) {
+                        evt = window.event;
+                    }
+                    var left = evt.clientX;
+                    var rect = slider.getBoundingClientRect();
+                    slider.tmpvalue = Math.round(left - rect.left - slider.knobwidth);
+                    if (slider.tmpvalue < 0) {
+                        slider.tmpvalue = 0;
+                    } else if (slider.tmpvalue > slider.clientWidth) {
+                        slider.tmpvalue = slider.clientWidth;
+                    }
+                    set_value();
+                    return false;
+                }
+            };
+
+            window.onresize = evt => {
+                slider.tmpvalue = slider.ValueRatio * slider.clientWidth;
+                set_value();
+            };
+
+            const touchStartEvent = evt => {
+                evt.preventDefault();
+                slider.knob.onmousedown();
+            };
+            const touchEndEvent = evt => {
+                evt.preventDefault();
+                document.onmouseup();
+            };
+            const touchMoveEvent = evt => {
+                evt.preventDefault();
+                if (slider.isDragging) {
+                    var touch = evt.changedTouches[0];
+                    var left = touch.pageX;
+                    var rect = slider.getBoundingClientRect();
+                    slider.tmpvalue = Math.round(left - rect.left - slider.knobwidth);
+                    if (slider.tmpvalue < 0) {
+                        slider.tmpvalue = 0;
+                    } else if (slider.tmpvalue > slider.clientWidth) {
+                        slider.tmpvalue = slider.clientWidth;
+                    }
+                    set_value();
+                }
+            };
+
+            slider.knob.addEventListener('touchstart', touchStartEvent, false);
+            slider.knob.addEventListener('touchmove', touchMoveEvent, false);
+            slider.knob.addEventListener('touchend', touchEndEvent, false);
+
+            var set_value = () => {
+                slider.knob.style.left = (slider.tmpvalue - slider.knob.clientWidth / 2) + 'px';
+                slider.ValuePx = slider.tmpvalue;
+                slider.ValueRatio = slider.tmpvalue / slider.clientWidth;
+                if (slider.onRatioChanged != undefined) {
+                    slider.onRatioChanged(slider.ValueRatio);
+                }
+            };
+            set_value();
+
+            slider.onclick = evt => {
+                slider.isDragging = true;
+                document.onmousemove(evt);
+                document.onmouseup();
+            };
+        };
+
+        const SetSliderRatio = (slider, ratio) => {
+            slider.tmpvalue = ratio * slider.clientWidth;
+            slider.knob.style.left = (slider.tmpvalue - slider.knob.clientWidth / 2) + 'px';
+            slider.ValuePx = slider.tmpvalue;
+            slider.ValueRatio = slider.tmpvalue / slider.clientWidth;
+        };
+
     </script>
     <script type="text/javascript">
         const Reset = () => {
-            Dom.Image = document.getElementById("Video");
-            Dom.ImageVideoBuffer = document.getElementById("VideoBuffer");
+            Cold.Image = document.getElementById("Video");
+            Cold.ImageVideoBuffer = document.getElementById("VideoBuffer");
+            Cold.TimeSlider = document.getElementById('timeslider1');
+            Cold.TimeStamp = document.getElementById('TimeStamp');
+            Cold.ButtonStop = document.getElementById('ButtonStop');
+            Cold.ButtonPlay = document.getElementById('ButtonPlay');
+            Cold.ButtonFF = document.getElementById('ButtonFF');
+            Cold.ButtonNow = document.getElementById('ButtonNow');
 
-            Dom.ImageVideoBuffer.onload = () => {
-                Dom.ImageLastSuccess = Dom.ImageVideoBuffer.src;
-                Dom.Image.src = Dom.ImageLastSuccess;
-                Param.OffsetMilliseconds = Param.OffsetMilliseconds + 100;
+            Hot.TargetDate = new Date();
+            ButtonNow();
+            Hot.OffsetMilliseconds = -0.0;
+            Hot.LastSuccessSrc = Cold.Image.src;
+
+            Cold.ImageVideoBuffer.onload = () => {
+                Hot.LastSuccessSrc = Cold.ImageVideoBuffer.src;
+                Cold.Image.src = Hot.LastSuccessSrc;
+                Hot.OffsetMilliseconds = Hot.OffsetMilliseconds + 100;
             }
-            Dom.ImageVideoBuffer.onerror = () => {
-                Param.OffsetMilliseconds -= 500;
-                Dom.Image.src = Dom.ImageLastSuccess;
+            Cold.ImageVideoBuffer.onerror = () => {
+                Hot.OffsetMilliseconds -= 500;
+                Cold.Image.src = Hot.LastSuccessSrc;
             }
 
             $.get("/api/Time",
                 function (data) {
-                    Param.StartTime = new Date(data);
+                    Cold.StartTime = new Date(data);
                     var now = new Date();
-                    Param.OffsetMilliseconds = Param.StartTime - now;
-
-                    setInterval(AutoUpdateShot, Param.IntervalMilliseconds);
+                    Hot.OffsetMilliseconds = Cold.StartTime - now;
+                    setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
                 }
             );
+
+            var dp = document.getElementById("DateLinks");
+            var dph = "";
+            for (var i = 2; i >= 0; i--) {
+                var today = new Date();
+                today.setDate(today.getDate() - i);
+                var dstr = (today.getMonth() + 1) + "/" + today.getDate();
+                var bcol = i == 0 ? "btn-primary text-light" : "btn-info text-light";
+                var ref = "javascript:ChangeDate(\"" + today.toISOString() + "\")";
+                dph = dph + "<span><a class='btn " + bcol + " DateButton' href='" + ref + "'>" + dstr + "</a></span>";
+            }
+            dp.innerHTML = dph;
+
+            SliderProc(Cold.TimeSlider);
+
+            Cold.TimeSlider.onRatioChanged = ratio => {
+                var t = new Date(Hot.TargetDate);
+                var sec = ratio * 86399;
+                t.setMilliseconds(0);
+                t.setHours(0);
+                t.setMinutes(0);
+                t.setSeconds(sec);
+
+                if (t < new Date()) {
+                    Hot.LastSuccessSrc = "/img/novideo.png";
+                } else {
+                    Hot.LastSuccessSrc = "/img/novideof.png";
+                }
+                UpdateShot(t);
+            };
+
+            Cold.TimeSlider.onBeginning = ratio => {
+                ButtonStop();
+                Hot.LastSuccessSrc = "/img/novideo.png";
+            };
+
+            Cold.TimeSlider.onFnished = ratio => {
+                ButtonPlay();
+            };
+        };
+
+        const ChangeDate = (isodate) => {
+            Hot.TargetDate = new Date(isodate);
+            AutoUpdateShot();
+        }
+
+        const UpdateShot = t => {
+            Cold.ImageVideoBuffer.src = '/api/Frame/' + '@ViewBag.Location' + '?dt=' + t.toISOString();
+            var ratio = t.getHours() * 3600 + t.getMinutes() * 60 + t.getSeconds() + t.getMilliseconds() / 1000;
+            ratio /= 86399.0;
+            SetSliderRatio(Cold.TimeSlider, ratio);
+            var a = new Date();
+            Cold.TimeStamp.innerHTML = t.toLocaleString();
         };
 
         const AutoUpdateShot = () => {
-            var t = new Date();
-            t.setMilliseconds(t.getMilliseconds() + Param.OffsetMilliseconds);
-            t.setMilliseconds(0);
-            Dom.ImageVideoBuffer.src = '/api/Frame/' + '@ViewBag.Location' + '?dt=' + t.toISOString();
+            if (Hot.PlayMode == "PLAYSHIFTED") {
+                var t = new Date();
+                t.setFullYear(Hot.TargetDate.getFullYear());
+                t.setMonth(Hot.TargetDate.getMonth());
+                t.setDate(Hot.TargetDate.getDate());
+                t.setHours(0);
+                t.setMinutes(0);
+                t.setMilliseconds(0);
+                var sec = Cold.TimeSlider.ValueRatio * 86399.0;
+                t.setSeconds(sec);
+                t.setMilliseconds(Cold.IntervalMilliseconds + 1);
+                var now = new Date();
+                if (t > now) {
+                    ButtonNow();
+                } else {
+                    UpdateShot(t);
+                }
+            }
+            if (Hot.PlayMode == "LATEST") {
+                var t = new Date();
+                t.setFullYear(Hot.TargetDate.getFullYear());
+                t.setMonth(Hot.TargetDate.getMonth());
+                t.setDate(Hot.TargetDate.getDate());
+                t.setMilliseconds(t.getMilliseconds() + Hot.OffsetMilliseconds);
+                t.setMilliseconds(0);
+                UpdateShot(t);
+            }
+        };
+
+        const ButtonStop = () => {
+            Hot.PlayMode = "STOP";
+            Cold.ButtonStop.src = "/img/stopw.gif";
+            Cold.ButtonPlay.src = "/img/playw.png";
+            Cold.ButtonFF.src = "/img/ffw.png";
+            Cold.ButtonNow.src = "/img/noww.png";
+        };
+        const ButtonPlay = () => {
+            Hot.PlayMode = "PLAYSHIFTED";
+            Cold.ButtonPlay.src = "/img/playw.gif";
+            Cold.ButtonStop.src = "/img/stopw.png";
+            Cold.ButtonFF.src = "/img/ffw.png";
+            Cold.ButtonNow.src = "/img/noww.png";
+        };
+        const ButtonFF = () => {
+            Cold.ButtonFF.src = "/img/ffw.gif";
+            Cold.ButtonStop.src = "/img/stopw.png";
+            Cold.ButtonPlay.src = "/img/playw.png";
+            Cold.ButtonNow.src = "/img/noww.png";
+        };
+        const ButtonNow = () => {
+            Hot.PlayMode = "LATEST";
+            Cold.ButtonNow.src = "/img/noww.gif";
+            Cold.ButtonStop.src = "/img/stopw.png";
+            Cold.ButtonPlay.src = "/img/playw.png";
+            Cold.ButtonFF.src = "/img/ffw.png";
+        };
+
+        const ButtonSkip = offsetsec => {
+            Cold.TimeSlider.ValueRatio = Cold.TimeSlider.ValueRatio + offsetsec / 86399.0;
+            ButtonPlay();
+            AutoUpdateShot();
         };
     </script>
     <script type="text/javascript">

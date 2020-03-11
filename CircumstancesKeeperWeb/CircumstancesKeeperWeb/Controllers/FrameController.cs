@@ -65,30 +65,42 @@ namespace CircumstancesKeeperWeb.Controllers
                 var key = conname + "/" + fname;
 
                 MemoryStream ms;
-                if (Cache.TryGetValue(key, out var buf) == false)
+                bool cacheret;
+                byte[] buf;
+                lock (Cache)
+                {
+                    cacheret = Cache.TryGetValue(key, out buf);
+                }
+                if (cacheret  == false)
                 {
                     var blobcontainer = Blobs.GetValueOrDefault(l, true, a => Blob.GetContainerReference(conname));
                     var blob = blobcontainer.GetBlobReference(fname);
                     ms = new MemoryStream();    // keep MemoryStream instance for lazy processing in FileStreamResult. (not use using{} )
                     await blob.DownloadToStreamAsync(ms);
 
-                    Cache[key] = ms.ToArray();
-                    CacheKeys.AddLast(key);
-                    if (CacheKeys.Count > 100)
+                    lock (Cache)
                     {
-                        var delkey = CacheKeys.First;
-                        CacheKeys.Remove(delkey);
-                        Cache.Remove(delkey.Value);
+                        Cache[key] = ms.ToArray();
+                        CacheKeys.AddLast(key);
+                        if (CacheKeys.Count > 100)
+                        {
+                            var delkey = CacheKeys.First;
+                            CacheKeys.Remove(delkey);
+                            Cache.Remove(delkey.Value);
+                        }
                     }
                 }
                 else
                 {
                     ms = new MemoryStream(buf);
-                    var node = CacheKeys.Find(key);
-                    if (node != null)
+                    lock (Cache)
                     {
-                        CacheKeys.Remove(node);
-                        CacheKeys.AddLast(key); // change list index
+                        var node = CacheKeys.Find(key);
+                        if (node != null)
+                        {
+                            CacheKeys.Remove(node);
+                            CacheKeys.AddLast(key); // change list index
+                        }
                     }
                 }
                 ms.Seek(0, SeekOrigin.Begin);
