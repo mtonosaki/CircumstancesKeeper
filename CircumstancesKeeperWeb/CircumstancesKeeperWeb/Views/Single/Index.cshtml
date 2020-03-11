@@ -1,0 +1,60 @@
+﻿@* (c) 2020 Manabu Tonosaki *@
+@* Licensed under the MIT license. *@
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="~/css/videoview.css" rel="stylesheet" />
+
+<h1>@ViewBag.Location</h1>
+<div class="MonitorView">
+    <img id="Video" src="~/img/novideo.png" class="img-responsive center-block" style="margin-right:8px;" />
+</div>
+
+<img id="VideoBuffer" src="~/img/novideo.png" class="img-responsive center-block" style="visibility: hidden;" />
+
+@section Scripts {
+    <script type="text/javascript">
+        var Param = {};
+        Param.IntervalMilliseconds = 1000;
+        Param.OffsetMilliseconds = -0.0;
+        Param.Controller = '/Single?location=';
+        var Dom = {};
+    </script>
+    <script type="text/javascript">
+        const Reset = () => {
+            Dom.Image = document.getElementById("Video");
+            Dom.ImageVideoBuffer = document.getElementById("VideoBuffer");
+
+            Dom.ImageVideoBuffer.onload = () => {
+                Dom.ImageLastSuccess = Dom.ImageVideoBuffer.src;
+                Dom.Image.src = Dom.ImageLastSuccess;
+                Param.OffsetMilliseconds = Param.OffsetMilliseconds + 100;
+            }
+            Dom.ImageVideoBuffer.onerror = () => {
+                Param.OffsetMilliseconds -= 500;
+                Dom.Image.src = Dom.ImageLastSuccess;
+            }
+
+            $.get("/api/Time",
+                function (data) {
+                    Param.StartTime = new Date(data);
+                    var now = new Date();
+                    Param.OffsetMilliseconds = Param.StartTime - now;
+
+                    setInterval(AutoUpdateShot, Param.IntervalMilliseconds);
+                }
+            );
+        };
+
+        const AutoUpdateShot = () => {
+            var t = new Date();
+            t.setMilliseconds(t.getMilliseconds() + Param.OffsetMilliseconds);
+            t.setMilliseconds(0);
+            Dom.ImageVideoBuffer.src = '/api/Frame/' + '@ViewBag.Location' + '?dt=' + t.toISOString();
+        };
+    </script>
+    <script type="text/javascript">
+        $(document).ready(Reset);
+    </script>
+}

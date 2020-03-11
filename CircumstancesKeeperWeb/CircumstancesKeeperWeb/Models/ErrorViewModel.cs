@@ -1,5 +1,3 @@
-using System;
-
 namespace CircumstancesKeeperWeb.Models
 {
     public class ErrorViewModel
