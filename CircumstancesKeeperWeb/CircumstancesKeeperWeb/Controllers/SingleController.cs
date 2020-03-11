@@ -1,8 +1,10 @@
 ﻿// (c) 2020 Manabu Tonosaki
 // Licensed under the MIT license.
 
+using CircumstancesKeeperWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace CircumstancesKeeperWeb.Controllers
 {
@@ -18,7 +20,11 @@ namespace CircumstancesKeeperWeb.Controllers
         public IActionResult Index(string l)
         {
             ViewBag.Location = l;
-            return View();
+
+            var model = new SingleViewModel
+            {
+            };
+            return View(model);
         }
     }
 }

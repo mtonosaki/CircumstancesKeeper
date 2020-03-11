@@ -1,2 +1,35 @@
 ﻿body {
 }
+
+.DateButton {
+    margin: 4px;
+    margin-right: 8px;
+}
+
+.TimeSliderDegign {
+    position: relative;
+    width: 100%;
+    height: 20px;
+}
+
+.TimeSliderDegign div {
+    background: #ddd;
+    height: 3px;
+    border: 1px inset #aaa;
+    position: relative;
+    top: 12px;
+    font-size: 0px;
+}
+
+.TimeSliderDegign input {
+    position: absolute;
+    width: 15px;
+    height: 20px;
+    display: block;
+}
+
+.TimeStampDesign {
+    font-family: Tahoma;
+    font-size: large;
+    font-weight: bold;
+}
