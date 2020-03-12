@@ -37,11 +37,23 @@
         <img id="ButtonNow" class="ImageButton" src="~/img/noww.png" /> NOW
     </a>
     <br />
-    <a class="btn btn-secondary text-light" onclick="javascript: ButtonSkip(-15);">
-        -15sec
+    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-174);">
+        -180
     </a>
-    <a class="btn btn-secondary text-light" onclick="javascript: ButtonSkip(15);">
-        +15sec
+    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-15.0);">
+        -15
+    </a>
+    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-1.0);">
+        -1
+    </a>
+    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(+0.9);">
+        +1
+    </a>
+    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(14.0);">
+        +15
+    </a>
+    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(173.0);">
+        +180
     </a>
 </div>
 
@@ -51,8 +63,7 @@
         var Cold = {};
         Cold.IntervalMilliseconds = 1000;
     </script>
-    <script type="text/javascript">
-        @*TIME SLIDER PROC*@
+    <script type="text/javascript"> @*TIME SLIDER PROC*@
         const SliderProc = slider => {
             slider.knob = slider.getElementsByTagName('input')[0];
             slider.isDragging = false;
@@ -178,16 +189,21 @@
                 Hot.OffsetMilliseconds = Hot.OffsetMilliseconds + 100;
             }
             Cold.ImageVideoBuffer.onerror = () => {
-                Hot.OffsetMilliseconds -= 500;
+                Hot.OffsetMilliseconds -= 900;
                 Cold.Image.src = Hot.LastSuccessSrc;
             }
 
             $.get("/api/Time",
-                function (data) {
-                    Cold.StartTime = new Date(data);
-                    var now = new Date();
-                    Hot.OffsetMilliseconds = Cold.StartTime - now;
-                    setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
+                function (dmy) {    // wakeup API
+                    $.get("/api/Time",
+                        function (data) {
+                            Cold.StartTime = new Date(data);
+                            var now = new Date();
+                            Hot.OffsetMilliseconds = Cold.StartTime - now;
+                            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
+                            setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
+                        }
+                    );
                 }
             );
 
@@ -233,7 +249,8 @@
 
         const ChangeDate = (isodate) => {
             Hot.TargetDate = new Date(isodate);
-            AutoUpdateShot();
+            Hot.LastSuccessSrc = "/img/novideo.png";
+            AutoUpdateShot(true);
         }
 
         const UpdateShot = t => {
@@ -245,8 +262,8 @@
             Hot.TargetDate = t;
         };
 
-        const AutoUpdateShot = () => {
-            if (Hot.PlayMode == "PLAYSHIFTED") {
+        const AutoUpdateShot = forceFlag => {
+            if (Hot.PlayMode == "PLAYSHIFTED" || forceFlag == true) {
                 var t = new Date();
                 t.setFullYear(Hot.TargetDate.getFullYear());
                 t.setMonth(Hot.TargetDate.getMonth());
@@ -276,20 +293,24 @@
         };
 
         const ButtonStop = () => {
+            if (Hot.PlayMode == "STOP") return;
             Hot.PlayMode = "STOP";
             Cold.ButtonStop.src = "/img/stopw.gif";
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
+            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonPlay = () => {
+            if (Hot.PlayMode == "LATEST") return;
             Hot.PlayMode = "PLAYSHIFTED";
             Cold.ButtonPlay.src = "/img/playw.gif";
             Cold.ButtonStop.src = "/img/stopw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
+            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonFF = () => {
             Cold.ButtonFF.src = "/img/ffw.gif";
@@ -297,20 +318,28 @@
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
+            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonNow = () => {
+            if (Hot.PlayMode == "LATEST") return;
             Hot.PlayMode = "LATEST";
             Cold.ButtonNow.src = "/img/noww.gif";
             Cold.ButtonStop.src = "/img/stopw.png";
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
+            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
 
         const ButtonSkip = offsetsec => {
-            Cold.TimeSlider.ValueRatio = Cold.TimeSlider.ValueRatio + offsetsec / 86399.0;
-            ButtonPlay();
-            AutoUpdateShot();
+            Cold.TimeSlider.ValueRatio = Cold.TimeSlider.ValueRatio + offsetsec / 83399.0;
+            if (Hot.PlayMode == "LATEST") {
+                Hot.PlayMode = "--";
+            }
+            if (Hot.PlayMode != "STOP") {
+                ButtonPlay();
+            }
+            AutoUpdateShot(true);
         };
     </script>
     <script type="text/javascript">
