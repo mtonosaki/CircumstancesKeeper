@@ -241,8 +241,8 @@
             var ratio = t.getHours() * 3600 + t.getMinutes() * 60 + t.getSeconds() + t.getMilliseconds() / 1000;
             ratio /= 86399.0;
             SetSliderRatio(Cold.TimeSlider, ratio);
-            var a = new Date();
             Cold.TimeStamp.innerHTML = t.toLocaleString();
+            Hot.TargetDate = t;
         };
 
         const AutoUpdateShot = () => {
@@ -281,6 +281,7 @@
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
+            Hot.LastSuccessSrc = "/img/novideo.png";
         };
         const ButtonPlay = () => {
             Hot.PlayMode = "PLAYSHIFTED";
@@ -288,12 +289,14 @@
             Cold.ButtonStop.src = "/img/stopw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
+            Hot.LastSuccessSrc = "/img/novideo.png";
         };
         const ButtonFF = () => {
             Cold.ButtonFF.src = "/img/ffw.gif";
             Cold.ButtonStop.src = "/img/stopw.png";
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonNow.src = "/img/noww.png";
+            Hot.LastSuccessSrc = "/img/novideo.png";
         };
         const ButtonNow = () => {
             Hot.PlayMode = "LATEST";
@@ -301,6 +304,7 @@
             Cold.ButtonStop.src = "/img/stopw.png";
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
+            Hot.LastSuccessSrc = "/img/novideo.png";
         };
 
         const ButtonSkip = offsetsec => {

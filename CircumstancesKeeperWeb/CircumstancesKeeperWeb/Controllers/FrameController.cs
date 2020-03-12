@@ -73,7 +73,7 @@ namespace CircumstancesKeeperWeb.Controllers
                 }
                 if (cacheret  == false)
                 {
-                    var blobcontainer = Blobs.GetValueOrDefault(l, true, a => Blob.GetContainerReference(conname));
+                    var blobcontainer = Blobs.GetValueOrDefault(conname, true, a => Blob.GetContainerReference(conname));
                     var blob = blobcontainer.GetBlobReference(fname);
                     ms = new MemoryStream();    // keep MemoryStream instance for lazy processing in FileStreamResult. (not use using{} )
                     await blob.DownloadToStreamAsync(ms);
