@@ -5,17 +5,20 @@
 <ul class="navbar-nav">
     @if (User.Identity.IsAuthenticated)
     {
+        var idx = User.Identity.Name?.IndexOf("@") ?? 0;
+        var name = idx > 0 ? User.Identity.Name?.Substring(0, idx) ?? "n/a" : User.Identity.Name;
+
         <li class="nav-item">
-            <span class="navbar-text text-dark">Hello </span><span class="text-black-50 ml-1">@User.Identity.Name</span><span class=".ml-1">!</span>
+            <span class="nav-link text-black-50" style="white-space: nowrap;">Hi, @name</span>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="AzureAD" asp-controller="Account" asp-action="SignOut">Sign out</a>
+            <a class="nav-link text-dark" asp-area="AzureAD" asp-controller="Account" asp-action="SignOut" style="white-space: nowrap;">Sign out</a>
         </li>
     }
     else
     {
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="AzureAD" asp-controller="Account" asp-action="SignIn">Sign in</a>
+            <a class="nav-link text-dark" asp-area="AzureAD" asp-controller="Account" asp-action="SignIn" style="white-space: nowrap;">Sign in</a>
         </li>
     }
 </ul>
