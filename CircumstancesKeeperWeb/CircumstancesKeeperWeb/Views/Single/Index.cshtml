@@ -8,62 +8,77 @@
 }
 <link href="~/css/videoview.css" rel="stylesheet" asp-append-version="true" />
 
+<img id="VideoBuffer" src="~/img/novideo.png" style="width: 0; height: 0; visibility: hidden;" />
+
 <h1>@ViewBag.Location</h1>
-<div class="MonitorView">
-    <img id="Video" src="~/img/novideo.png" class="img-responsive center-block" style="margin-right:8px;" />
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 px-0">
+            <img id="Video" src="~/img/novideo.png" class="img-fluid" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div>
+                <span id="DateLinks" class="DatePicker">...</span>
+                <span id="TimeStamp" class="TimeStampDesign">2020/12/31 23:59:59</span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div id="timeslider1" class="TimeSliderDegign">
+                <div></div>
+                <input type="button" value="">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div>
+                <a class="btn btn-info text-light" onclick="javascript: ButtonStop();">
+                    <img id="ButtonStop" class="ImageButton" src="~/img/stopw.png" /> STOP
+                </a>
+                <a class="btn btn-info text-light" onclick="javascript: ButtonPlay();">
+                    <img id="ButtonPlay" class="ImageButton" src="~/img/playw.png" /> PLAY
+                </a>
+                <a class="btn btn-info text-light" style="visibility:hidden; width:0;" onclick="javascript: ButtonFF();">
+                    <img id="ButtonFF" class="ImageButton" src="~/img/ffw.png" /> FF
+                </a>
+                <a class="btn btn-primary text-light" onclick="javascript: ButtonNow();">
+                    <img id="ButtonNow" class="ImageButton" src="~/img/noww.png" /> NOW
+                </a>
+                <br />
+                <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-174);">
+                    -180
+                </a>
+                <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-15.0);">
+                    -15
+                </a>
+                <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-1.0);">
+                    -1
+                </a>
+                <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(+0.9);">
+                    +1
+                </a>
+                <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(14.0);">
+                    +15
+                </a>
+                <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(173.0);">
+                    +180
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <span id="DateLinks" class="DatePicker">...</span>
-    <span id="TimeStamp" class="TimeStampDesign">2020/12/31 23:59:59</span>
-</div>
-
-<div id="timeslider1" class="TimeSliderDegign">
-    <div></div>
-    <input type="button" value="">
-</div>
-
-<img id="VideoBuffer" src="~/img/novideo.png" class="img-responsive center-block" style="height: 0px; visibility: hidden;" />
-<div>
-    <a class="btn btn-info text-light" onclick="javascript: ButtonStop();">
-        <img id="ButtonStop" class="ImageButton" src="~/img/stopw.png" /> STOP
-    </a>
-    <a class="btn btn-info text-light" onclick="javascript: ButtonPlay();">
-        <img id="ButtonPlay" class="ImageButton" src="~/img/playw.png" /> PLAY
-    </a>
-    <a class="btn btn-info text-light" style="visibility:hidden; width:0;" onclick="javascript: ButtonFF();">
-        <img id="ButtonFF" class="ImageButton" src="~/img/ffw.png" /> FF
-    </a>
-    <a class="btn btn-primary text-light" onclick="javascript: ButtonNow();">
-        <img id="ButtonNow" class="ImageButton" src="~/img/noww.png" /> NOW
-    </a>
-    <br />
-    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-174);">
-        -180
-    </a>
-    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-15.0);">
-        -15
-    </a>
-    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(-1.0);">
-        -1
-    </a>
-    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(+0.9);">
-        +1
-    </a>
-    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(14.0);">
-        +15
-    </a>
-    <a class="btn btn-secondary btn-sm text-light CancelDoubleTapZoom" onclick="javascript: ButtonSkip(173.0);">
-        +180
-    </a>
-</div>
-
 @section Scripts {
     <script type="text/javascript">
         var Hot = {};
         var Cold = {};
         Cold.IntervalMilliseconds = 1000;
     </script>
-    <script type="text/javascript"> @*TIME SLIDER PROC*@
+    <script type="text/javascript">
+ @*TIME SLIDER PROC*@
         const SliderProc = slider => {
             slider.knob = slider.getElementsByTagName('input')[0];
             slider.isDragging = false;
