@@ -241,8 +241,8 @@
             var ratio = t.getHours() * 3600 + t.getMinutes() * 60 + t.getSeconds() + t.getMilliseconds() / 1000;
             ratio /= 86399.0;
             SetSliderRatio(Cold.TimeSlider, ratio);
-            var a = new Date();
             Cold.TimeStamp.innerHTML = t.toLocaleString();
+            Hot.TargetDate = t;
         };
 
         const AutoUpdateShot = () => {
