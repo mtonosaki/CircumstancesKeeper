@@ -36,4 +36,9 @@
 .ImageButton {
     width: 24px;
     height: 24px;
+    touch-action: manipulation;
+}
+
+.CancelDoubleTapZoom {
+    touch-action: manipulation;
 }
