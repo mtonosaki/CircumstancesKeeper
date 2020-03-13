@@ -21,7 +21,7 @@
         <div class="col-12">
             <div>
                 <span id="DateLinks" class="DatePicker">...</span>
-                <span id="TimeStamp" class="TimeStampDesign">2020/12/31 23:59:59</span>
+                <span id="TimeStamp" class="TimeStampDesign">2020/12/31<br />23:59:59</span>
             </div>
         </div>
     </div>
@@ -273,7 +273,7 @@
             var ratio = t.getHours() * 3600 + t.getMinutes() * 60 + t.getSeconds() + t.getMilliseconds() / 1000;
             ratio /= 86399.0;
             SetSliderRatio(Cold.TimeSlider, ratio);
-            Cold.TimeStamp.innerHTML = t.toLocaleString();
+            Cold.TimeStamp.innerHTML = t.getFullYear() + "/" + (t.getMonth() + 1) + "/" + t.getDate() + "<br/>" + t.getHours() + ":" + ("0" + t.getMinutes()).slice(-2) + ":" + ("0" + t.getSeconds()).slice(-2);
             Hot.TargetDate = t;
         };
 
