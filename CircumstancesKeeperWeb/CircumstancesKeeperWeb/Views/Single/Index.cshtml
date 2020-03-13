@@ -208,17 +208,13 @@
                 Cold.Image.src = Hot.LastSuccessSrc;
             }
 
-            $.get("/api/Time",
-                function (dmy) {    // wakeup API
-                    $.get("/api/Time",
-                        function (data) {
-                            Cold.StartTime = new Date(data);
-                            var now = new Date();
-                            Hot.OffsetMilliseconds = Cold.StartTime - now;
-                            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
-                            setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
-                        }
-                    );
+            $.get("/api/Last/@ViewBag.Location",
+                function (dt) {
+                    Cold.StartTime = new Date(dt + 'Z');
+                    var now = new Date();
+                    Hot.OffsetMilliseconds = Cold.StartTime - now;
+                    Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
+                    setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
                 }
             );
 
@@ -315,7 +311,6 @@
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonPlay = () => {
             if (Hot.PlayMode == "LATEST") return;
@@ -325,7 +320,6 @@
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonFF = () => {
             Cold.ButtonFF.src = "/img/ffw.gif";
@@ -333,7 +327,6 @@
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonNow = () => {
             if (Hot.PlayMode == "LATEST") return;
@@ -343,7 +336,7 @@
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
+            Hot.OffsetMilliseconds = Hot.OffsetMillisecondsOrg;
         };
 
         const ButtonSkip = offsetsec => {

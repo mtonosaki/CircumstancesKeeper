@@ -8,6 +8,7 @@ namespace CircumstancesKeeperWeb.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class TimeController : ControllerBase
     {
         // GET: api/Time
