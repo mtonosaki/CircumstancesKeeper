@@ -21,7 +21,7 @@
         <div class="col-12">
             <div>
                 <span id="DateLinks" class="DatePicker">...</span>
-                <span id="TimeStamp" class="TimeStampDesign">2020/12/31 23:59:59</span>
+                <span id="TimeStamp" class="TimeStampDesign">2020/12/31<br />23:59:59</span>
             </div>
         </div>
     </div>
@@ -208,17 +208,13 @@
                 Cold.Image.src = Hot.LastSuccessSrc;
             }
 
-            $.get("/api/Time",
-                function (dmy) {    // wakeup API
-                    $.get("/api/Time",
-                        function (data) {
-                            Cold.StartTime = new Date(data);
-                            var now = new Date();
-                            Hot.OffsetMilliseconds = Cold.StartTime - now;
-                            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
-                            setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
-                        }
-                    );
+            $.get("/api/Last/@ViewBag.Location",
+                function (dt) {
+                    Cold.StartTime = new Date(dt + 'Z');
+                    var now = new Date();
+                    Hot.OffsetMilliseconds = Cold.StartTime - now;
+                    Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
+                    setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
                 }
             );
 
@@ -273,7 +269,7 @@
             var ratio = t.getHours() * 3600 + t.getMinutes() * 60 + t.getSeconds() + t.getMilliseconds() / 1000;
             ratio /= 86399.0;
             SetSliderRatio(Cold.TimeSlider, ratio);
-            Cold.TimeStamp.innerHTML = t.toLocaleString();
+            Cold.TimeStamp.innerHTML = t.getFullYear() + "/" + (t.getMonth() + 1) + "/" + t.getDate() + "<br/>" + t.getHours() + ":" + ("0" + t.getMinutes()).slice(-2) + ":" + ("0" + t.getSeconds()).slice(-2);
             Hot.TargetDate = t;
         };
 
@@ -315,7 +311,6 @@
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonPlay = () => {
             if (Hot.PlayMode == "LATEST") return;
@@ -325,7 +320,6 @@
             Cold.ButtonFF.src = "/img/ffw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonFF = () => {
             Cold.ButtonFF.src = "/img/ffw.gif";
@@ -333,7 +327,6 @@
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonNow.src = "/img/noww.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
         };
         const ButtonNow = () => {
             if (Hot.PlayMode == "LATEST") return;
@@ -343,7 +336,7 @@
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
+            Hot.OffsetMilliseconds = Hot.OffsetMillisecondsOrg;
         };
 
         const ButtonSkip = offsetsec => {
