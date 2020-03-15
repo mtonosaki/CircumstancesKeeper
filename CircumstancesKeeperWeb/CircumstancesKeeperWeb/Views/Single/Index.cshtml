@@ -214,6 +214,7 @@
                     var now = new Date();
                     Hot.OffsetMilliseconds = Cold.StartTime - now;
                     Hot.OffsetMillisecondsOrg = Hot.OffsetMilliseconds;
+                    Hot.OffsetMilliseconds -= 1000;
                     setInterval(AutoUpdateShot, Cold.IntervalMilliseconds);
                 }
             );
@@ -329,14 +330,13 @@
             Hot.LastSuccessSrc = "/img/novideo.png";
         };
         const ButtonNow = () => {
-            if (Hot.PlayMode == "LATEST") return;
             Hot.PlayMode = "LATEST";
             Cold.ButtonNow.src = "/img/noww.gif";
             Cold.ButtonStop.src = "/img/stopw.png";
             Cold.ButtonPlay.src = "/img/playw.png";
             Cold.ButtonFF.src = "/img/ffw.png";
             Hot.LastSuccessSrc = "/img/novideo.png";
-            Hot.OffsetMilliseconds = Hot.OffsetMillisecondsOrg;
+            Hot.OffsetMilliseconds = Hot.OffsetMillisecondsOrg - 1000;
         };
 
         const ButtonSkip = offsetsec => {
