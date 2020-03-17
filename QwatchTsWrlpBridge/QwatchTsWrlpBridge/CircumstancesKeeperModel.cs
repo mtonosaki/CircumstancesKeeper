@@ -13,5 +13,6 @@ namespace QwatchTsWrlpBridge
 		public DateTime EventTime { get; set; }
 		public byte[] ImageData { get; set; }
 		public string ImageType { get; set; }
+		public string ErrorMessage { get; set; }
 	}
 }
