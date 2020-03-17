@@ -81,13 +81,21 @@ namespace QwatchTsWrlpBridge
                         }
                     }
 
-                    var blob = BlobClient.GetContainerReference($"cam-{item.EventTime.ToString("yyyyMMdd")}-{SEC.Location}");
-                    blob.CreateIfNotExists();
+                    var blobcontainer = BlobClient.GetContainerReference($"cam-{item.EventTime.ToString("yyyyMMdd")}-{SEC.Location}");
+                    blobcontainer.CreateIfNotExists();
                     var fname = $"{item.Key}{item.ImageType}";
-                    var file = blob.GetBlockBlobReference(fname);
+                    var file = blobcontainer.GetBlockBlobReference(fname);
                     file.Metadata["EventTime"] = item.EventTime.ToString(TimeUtil.FormatYMDHMSms);
-                    file.Metadata["Length"] = item.ImageData.Length.ToString();
-                    file.UploadFromByteArray(item.ImageData, 0, item.ImageData.Length);
+
+                    if (item.ImageType != ".ERR")
+                    {
+                        file.Metadata["Length"] = item.ImageData.Length.ToString();
+                        file.UploadFromByteArray(item.ImageData, 0, item.ImageData.Length);
+                    }
+                    else
+                    {
+                        file.Metadata["Length"] = "0";
+                    }
                     waitms = 10;
 #if DEBUG
                     eventlog($"{item.EventTime.ToString(TimeUtil.FormatYMDHMSms)} -- uploaded : {fname}");
@@ -110,28 +118,53 @@ namespace QwatchTsWrlpBridge
         {
             while (cancellationToken.IsCancellationRequested == false)
             {
-                await Task.Delay(ResolutionMilliSeconds, cancellationToken); // upload 10s each to reduce request count to Azure.
-
-                var http = WebRequest.Create($"{SEC.Url}/snapshot.jpg");
-                http.Method = "GET";
-                http.ContentType = "image/jpeg";
-                http.Credentials = new NetworkCredential(SEC.UserName, SEC.Password);
-
                 var now = DateTime.UtcNow;
-                var res = http.GetResponse();
-                using (var bin = new BinaryReader(res.GetResponseStream()))
+                try
+                {
+                    await Task.Delay(ResolutionMilliSeconds, cancellationToken); // upload 10s each to reduce request count to Azure.
+
+                    var http = WebRequest.Create($"{SEC.Url}/snapshot.jpg");
+                    http.Method = "GET";
+                    http.ContentType = "image/jpeg";
+                    http.Credentials = new NetworkCredential(SEC.UserName, SEC.Password);
+
+                    now = DateTime.UtcNow;
+                    var res = await http.GetResponseAsync();
+                    using (var bin = new BinaryReader(res.GetResponseStream()))
+                    {
+                        var dat = new CircumstancesKeeperModel
+                        {
+                            Key = MakeKey(now),
+                            EventTime = now,
+                            ImageData = bin.ReadBytes((int)res.ContentLength),
+                            ImageType = ".jpg",
+                        };
+                        lock (UploadQueue)
+                        {
+                            UploadQueue.Enqueue(dat);
+                        }
+                    }
+                }
+                catch (WebException ex)
                 {
                     var dat = new CircumstancesKeeperModel
                     {
                         Key = MakeKey(now),
                         EventTime = now,
-                        ImageData = bin.ReadBytes((int)res.ContentLength),
-                        ImageType = ".jpg",
+                        ImageData = new byte[] { },
+                        ImageType = ".ERR",
+                        ErrorMessage = $"{ex.Message}",
                     };
                     lock (UploadQueue)
                     {
                         UploadQueue.Enqueue(dat);
                     }
+                }
+                catch (Exception ex)
+                {
+                    eventlog($"{ex.Message} {ex.StackTrace}");
+                    CancelHandler.Cancel();
+                    break;
                 }
             }
         }
